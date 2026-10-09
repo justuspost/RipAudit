@@ -1,0 +1,11 @@
+.git
+.github
+tests
+docs
+config
+appdata
+**/__pycache__
+*.db
+*.mkv
+*.mp4
+.venv

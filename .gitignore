@@ -1,0 +1,25 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+# Local runtime data and secrets
+config/
+appdata/
+*.db
+*.db-wal
+*.db-shm
+*.log
+.env
+settings.json
+secret.key
+setup-token
+# Never commit media
+*.mkv
+*.mp4
+*.m2ts
+*.iso
