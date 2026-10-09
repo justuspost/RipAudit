@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge, status_line %}
+{% block content %}
+<div class="row between">
+  <h1>Review queue</h1>
+  <form method="post" action="/scan-now"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="primary">Scan now</button></form>
+</div>
+<section class="counts">
+  {% for key in ['possible_incomplete','edition_review','unverified','probe_error','pending','no_runtime_issue','approved_exception','missing'] %}
+  <a class="count o-{{ key }}" href="/files?outcome={{ key }}{% if key == 'missing' %}&include_missing=1{% endif %}"><span>{{ counts.get(key, 0) }}</span>{{ OUTCOMES[key] }}</a>
+  {% endfor %}
+</section>
+
+<section class="card">
+  {% if queue %}
+  <table>
+    <thead><tr><th>Status</th><th>Movie</th><th>Measured</th><th>Expected</th><th>Difference</th><th>Why</th></tr></thead>
+    <tbody>
+    {% for q in queue %}
+    <tr>
+      <td>{{ badge(q.outcome, q.severity) }}</td>
+      <td><a href="/files/{{ q.id }}">{{ q.plex_title or basename(q.path) }}</a>{% if q.plex_year %} ({{ q.plex_year }}){% endif %}
+        {% if q.plex_edition %}<span class="tag">{{ q.plex_edition }}</span>{% endif %}
+        <div class="muted small path">{{ q.path }}</div></td>
+      <td>{{ fmt_duration(q.actual_seconds) }}</td>
+      <td>{{ fmt_duration(q.expected_seconds) }}</td>
+      <td class="num">{{ fmt_diff(q.difference_seconds) }}</td>
+      <td class="small">{{ q.reasons[0] if q.reasons else '' }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">Nothing needs review right now.{% if not total %} No files have been discovered yet — check your media roots in Settings, then choose Scan now.{% endif %}</p>
+  {% endif %}
+</section>
+
+<div class="grid2">
+<section class="card">
+  <h2>Scans</h2>
+  <ul class="plain">
+    <li><strong>Discovery</strong> last finished {{ fmt_time(last_ok.discovery) }}{% if scans.discovery %} · latest status {{ scans.discovery.status }}{% endif %}</li>
+    <li><strong>Plex sync</strong> last finished {{ fmt_time(last_ok.plex_sync) }}{% if scans.plex_sync %} · latest status {{ scans.plex_sync.status }}{% endif %}</li>
+    <li><strong>Queue</strong> {{ queued }} inspection job(s) waiting</li>
+    {% for r in roots %}<li><strong>{{ r.root }}</strong> {{ r.status }} · {{ r.found }} files{% if r.message %} <span class="muted">— {{ r.message }}</span>{% endif %}</li>{% endfor %}
+  </ul>
+</section>
+<section class="card">
+  <h2>Integrations</h2>
+  <ul class="plain">
+    {{ status_line('Plex', statuses.plex) }}
+    {{ status_line('TMDB', statuses.tmdb) }}
+    {{ status_line('Notifications', statuses.notifications) }}
+    <li><strong>Tdarr</strong> <span class="muted">{{ tdarr }}</span></li>
+  </ul>
+</section>
+</div>
+{% endblock %}

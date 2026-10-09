@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}RipAudit{% endblock %}</title>
+<link rel="icon" href="/static/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/"><img src="/static/icon.svg" alt="" width="26" height="26"> RipAudit</a>
+  {% if user %}
+  <nav>
+    <a href="/">Review</a>
+    <a href="/files">All files</a>
+    <a href="/settings">Settings</a>
+    <a href="/about">About</a>
+    <form method="post" action="/logout" class="inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button class="link">Sign out</button>
+    </form>
+  </nav>
+  {% endif %}
+</header>
+<main>
+  {% if flash %}<div class="flash {{ flash.kind }}">{{ flash.message }}</div>{% endif %}
+  {% if errors %}<div class="flash error"><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif %}
+  {% block content %}{% endblock %}
+</main>
+<footer>RipAudit {{ version }} · Flags rips for review; it does not certify that a rip is complete.</footer>
+</body>
+</html>

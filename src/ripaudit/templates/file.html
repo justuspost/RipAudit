@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge %}
+{% block title %}{{ ident.plex_title if ident and ident.plex_title else basename(f.path) }} · RipAudit{% endblock %}
+{% block content %}
+<p><a href="/">← Review queue</a></p>
+<div class="row between">
+  <h1>{{ ident.plex_title if ident and ident.plex_title else basename(f.path) }}{% if ident and ident.plex_year %} ({{ ident.plex_year }}){% endif %}</h1>
+  {% if result %}{{ badge(result.outcome, result.severity) }}{% endif %}
+</div>
+<p class="muted path">{{ f.path }}{% if f.state != 'present' %} · <strong>file missing</strong>{% endif %}</p>
+
+<section class="card">
+  <h2>Runtime comparison</h2>
+  <div class="compare">
+    <div><span class="label">Measured</span><span class="big">{{ fmt_duration(result.actual_seconds if result else None) }}</span>
+      <span class="muted small">FFprobe {{ probe.duration_source if probe and probe.duration_source else '' }}</span></div>
+    <div><span class="label">Expected</span><span class="big">{{ fmt_duration(result.expected_seconds if result else None) }}</span>
+      <span class="muted small">{{ {'tmdb': 'TMDB general runtime (whole minutes)', 'user_override': 'Your source runtime'}.get(result.expected_source if result else None, 'No reference yet') }}</span></div>
+    <div><span class="label">Difference</span><span class="big">{{ fmt_diff(result.difference_seconds if result else None) }}</span></div>
+  </div>
+  <ul>{% for r in reasons %}<li>{{ r }}</li>{% endfor %}</ul>
+  {% if result %}
+  <p class="small muted">File/probe: {{ result.probe_state }} · Identity: {{ result.identity_state }} · Runtime: {{ result.runtime_state }} · Decode health: {{ result.health_state }}</p>
+  {% endif %}
+  <p class="small muted">{{ tdarr }}</p>
+</section>
+
+<div class="grid2">
+<section class="card">
+  <h2>Actions</h2>
+  <form method="post" action="/files/{{ f.id }}/rescan" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button>Rescan file</button></form>
+  <form method="post" action="/files/{{ f.id }}/retry-metadata" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button>Retry metadata lookup</button></form>
+
+  <h3>Source runtime for this file version</h3>
+  <p class="small muted">For example, the length of the title you selected in DVDFab. It applies only to this file at its current size and modification time.</p>
+  {% if override and override.active %}<p>Current: <strong>{{ fmt_duration(override.expected_seconds) }}</strong> by {{ override.actor }} {% if override.note %}— {{ override.note }}{% endif %}</p>
+  <form method="post" action="/files/{{ f.id }}/clear-override" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button>Remove source runtime</button></form>{% endif %}
+  <form method="post" action="/files/{{ f.id }}/override" class="stack">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label>Runtime (H:MM:SS or minutes) <input name="runtime" required placeholder="2:14:07"></label>
+    <label>Note <input name="note" maxlength="500" placeholder="DVDFab title 00800.mpls, extended cut"></label>
+    <button>Save source runtime</button>
+  </form>
+
+  <h3>Approval</h3>
+  {% set active = approvals|selectattr('revoked_at', 'none')|list %}
+  {% if active %}
+  <p>Approved by {{ active[0].actor }} on {{ fmt_time(active[0].created_at) }}: {{ active[0].reason }}</p>
+  <form method="post" action="/files/{{ f.id }}/reopen" class="stack">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label>Reason for reopening <input name="reason" maxlength="1000"></label>
+    <button>Reopen</button>
+  </form>
+  {% else %}
+  <form method="post" action="/files/{{ f.id }}/approve" class="stack">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label>Reason (required) <input name="reason" required maxlength="1000" placeholder="Director's cut; disc title runtime confirmed"></label>
+    <label class="check"><input type="checkbox" name="preserve"> Keep this approval if the file is replaced at the same path</label>
+    <button>Approve exception</button>
+  </form>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>Movie match</h2>
+  {% if ident %}
+  <dl>
+    <dt>Plex state</dt><dd>{{ ident.state }}{% if ident.match_method %} ({{ ident.match_method }}){% endif %}</dd>
+    <dt>Plex title</dt><dd>{{ ident.plex_title or '—' }} {% if ident.plex_year %}({{ ident.plex_year }}){% endif %}</dd>
+    <dt>Edition</dt><dd>{{ ident.plex_edition or '—' }}</dd>
+    <dt>Library</dt><dd>{{ ident.plex_library or '—' }}</dd>
+    <dt>Version / part</dt><dd>{% if ident.plex_media_id %}media {{ ident.plex_media_id }}, part {{ ident.part_index }} of {{ ident.part_count }}{% else %}—{% endif %}</dd>
+    <dt>External IDs</dt><dd>{{ guids|join(', ') if guids else '—' }}</dd>
+    <dt>TMDB</dt><dd>{% if ident.tmdb_id %}{{ ident.tmdb_id }}{% if cache %} · {{ cache.title }} ({{ cache.year }}) · {{ cache.runtime_minutes or '?' }} min · fetched {{ fmt_time(cache.fetched_at) }}{% endif %}{% else %}—{% endif %}</dd>
+    {% if ident.note %}<dt>Note</dt><dd>{{ ident.note }}</dd>{% endif %}
+  </dl>
+  {% else %}<p class="muted">Waiting for Plex to index this file.</p>{% endif %}
+  {% if candidates %}
+  <h3>Candidates</h3>
+  <ul>{% for c in candidates %}<li>
+    <form method="post" action="/files/{{ f.id }}/match" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="tmdb_id" value="{{ c.tmdb_id }}"><button>Use</button></form>
+    TMDB {{ c.tmdb_id }} {{ c.title or '' }} {% if c.year %}({{ c.year }}){% endif %}</li>{% endfor %}</ul>
+  {% endif %}
+  <form method="post" action="/files/{{ f.id }}/match" class="stack">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label>Set TMDB movie ID manually <input name="tmdb_id" inputmode="numeric" pattern="[0-9]+" required></label>
+    <button>Save match</button>
+  </form>
+  {% if siblings %}
+  <h3>Other files for this Plex movie</h3>
+  <ul class="small">{% for s in siblings %}<li><a href="/files/{{ s.id }}">{{ basename(s.path) }}</a> — media {{ s.plex_media_id }}, part {{ s.part_index }}/{{ s.part_count }} · {{ OUTCOMES.get(s.outcome, s.outcome) }}</li>{% endfor %}</ul>
+  {% endif %}
+</section>
+</div>
+
+<section class="card">
+  <h2>FFprobe inspection</h2>
+  {% if probe %}
+  <dl class="cols">
+    <dt>Status</dt><dd>{{ probe.status }} ({{ fmt_time(probe.probed_at) }})</dd>
+    <dt>Container duration</dt><dd>{{ fmt_duration(probe.container_duration) }}</dd>
+    <dt>Video</dt><dd>{{ probe.video_codec or '—' }} {% if probe.width %}{{ probe.width }}×{{ probe.height }}{% endif %} · {{ probe.video_stream_count }} stream(s)</dd>
+    <dt>Audio</dt><dd>{{ probe.audio_count }} track(s): {{ audio_langs|join(', ') }}</dd>
+    <dt>Subtitles</dt><dd>{{ probe.subtitle_count }} track(s): {{ sub_langs|join(', ') }}</dd>
+    <dt>Size</dt><dd>{{ '{:,}'.format(f.size) }} bytes</dd>
+  </dl>
+  <p class="small muted">Track inventory shows what is in the file; it cannot tell which tracks the disc contained.</p>
+  {% if warnings %}<h3>Warnings</h3><ul>{% for w in warnings %}<li>{{ w }}</li>{% endfor %}</ul>{% endif %}
+  {% if probe.diagnostics %}<h3>Diagnostics</h3><pre>{{ probe.diagnostics }}</pre>{% endif %}
+  {% else %}<p class="muted">Not inspected yet.</p>{% endif %}
+</section>
+
+<section class="card">
+  <h2>History</h2>
+  <table class="small">
+    <thead><tr><th>When</th><th>Event</th><th>By</th><th>Detail</th></tr></thead>
+    <tbody>{% for e in events %}<tr><td>{{ fmt_time(e.ts) }}</td><td>{{ e.kind }}</td><td>{{ e.actor }}</td><td class="path">{{ e.detail or '' }}</td></tr>{% endfor %}</tbody>
+  </table>
+  {% if approvals %}
+  <h3>Approval record</h3>
+  <ul class="small">{% for a in approvals %}<li>{{ fmt_time(a.created_at) }} {{ a.actor }}: {{ a.reason }}{% if a.revoked_at %} — revoked {{ fmt_time(a.revoked_at) }} by {{ a.revoked_by }} ({{ a.revoke_reason }}){% endif %}</li>{% endfor %}</ul>
+  {% endif %}
+</section>
+{% endblock %}
