@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ripaudit"
+version = "0.1.0.dev0"
+description = "Audits ripped movie files for runtime discrepancies and flags files that need review."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi==0.143.0",
+  "uvicorn==0.54.0",
+  "jinja2==3.1.6",
+  "httpx==0.28.1",
+  "itsdangerous==2.2.0",
+  "python-multipart==0.0.32",
+]
+
+[project.optional-dependencies]
+dev = ["pytest==9.1.1", "ruff==0.16.10"]
+
+[project.scripts]
+ripaudit = "ripaudit.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+ripaudit = ["templates/*.html", "static/*", "migrations/*.sql"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "S", "UP"]
+ignore = ["S101", "S603", "S608"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S", "B"]

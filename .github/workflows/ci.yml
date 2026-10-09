@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "feature/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: Install
+        run: pip install -e ".[dev]" pip-audit
+      - name: Lint
+        run: ruff check src tests
+      - name: Test
+        run: pytest -q
+      - name: Dependency audit
+        run: pip-audit --skip-editable
+
+  container:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Build image (not pushed)
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          load: true
+          push: false
+          tags: ripaudit:ci
+          build-args: REVISION=${{ github.sha }}
+      - name: Smoke test
+        run: |
+          mkdir -p /tmp/appdata /tmp/media && sudo chown 99:100 /tmp/appdata
+          docker run -d --name ra --user 99:100 --read-only --tmpfs /tmp --cap-drop ALL \
+            -v /tmp/appdata:/config -v /tmp/media:/media:ro -p 8080:8080 ripaudit:ci
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8080/healthz && break; sleep 2; done
+          curl -fsS http://127.0.0.1:8080/healthz
+          test "$(docker exec ra id -u)" = "99"
+          docker exec ra ffprobe -version | head -1
+          docker stop -t 30 ra && docker logs ra
+      - name: Vulnerability scan
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ripaudit:ci
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "0"

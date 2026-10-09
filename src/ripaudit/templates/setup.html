@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Set up RipAudit{% endblock %}
+{% block content %}
+<section class="card narrow">
+  <h1>Create the administrator account</h1>
+  <p>To prove you control this server, enter the one-time setup token. It is stored in
+  <code>{{ token_path }}</code> inside the container (on Unraid: <code>appdata/ripaudit/setup-token</code>)
+  and is deleted once the account exists.</p>
+  <form method="post" action="/setup" class="stack">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label>Setup token <input name="setup_token" required autocomplete="off"></label>
+    <label>Username <input name="username" required autocomplete="username" maxlength="64"></label>
+    <label>Password (12+ characters) <input type="password" name="password" required minlength="12" autocomplete="new-password"></label>
+    <label>Confirm password <input type="password" name="confirm" required minlength="12" autocomplete="new-password"></label>
+    <button class="primary">Create account</button>
+  </form>
+</section>
+{% endblock %}

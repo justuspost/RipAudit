@@ -1,0 +1,24 @@
+# Example deployment. Copy to docker-compose.yml and adjust paths.
+services:
+  ripaudit:
+    image: ghcr.io/justuspost/ripaudit:edge   # not published yet; build locally with `docker build -t ripaudit .`
+    container_name: ripaudit
+    user: "99:100"                 # must be able to write ./appdata and read your media
+    ports:
+      - "8080:8080"                # WebUI; keep on your LAN or put behind a TLS reverse proxy
+    volumes:
+      - ./appdata:/config          # database, settings, secrets (back this up)
+      - /mnt/user/Movies:/media/Movies:ro   # read-only media
+    environment:
+      TZ: America/Chicago
+      # Optional: supply secrets through the environment instead of the WebUI.
+      # RIPAUDIT_PLEX_TOKEN: ...
+      # RIPAUDIT_TMDB_CREDENTIAL: ...
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    restart: unless-stopped

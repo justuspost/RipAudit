@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<!--
+  DEVELOPMENT ARTIFACT - NOT AN INSTALLATION-READY PUBLIC RELEASE.
+  The image ghcr.io/justuspost/ripaudit has not been published yet, and RipAudit
+  has not been submitted to Unraid Community Applications.
+-->
+<Container version="2">
+  <Name>RipAudit</Name>
+  <Repository>ghcr.io/justuspost/ripaudit:latest</Repository>
+  <Registry>https://ghcr.io/justuspost/ripaudit</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>bash</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/justuspost/RipAudit/issues</Support>
+  <Project>https://github.com/justuspost/RipAudit</Project>
+  <ReadMe>https://github.com/justuspost/RipAudit/blob/main/docs/unraid-installation.md</ReadMe>
+  <Overview>[DEVELOPMENT BUILD - not yet published] RipAudit checks newly ripped movie files for runtime discrepancies. It measures each file with FFprobe, uses Plex's identification to fetch an independent runtime from TMDB, and lists possible incomplete rips, edition mismatches, and unmatched files for review. It complements Tdarr's decode health checks and never modifies your media. A matching runtime is not proof that a rip is complete.&#xD;
+&#xD;
+External services: RipAudit contacts your Plex server and the TMDB API (api.themoviedb.org) using credentials you provide, and optionally your ntfy or webhook endpoint. This product uses the TMDB API but is not endorsed or certified by TMDB. RipAudit is not affiliated with Plex, Tdarr, DVDFab, or Unraid.&#xD;
+&#xD;
+First run: open the WebUI and enter the setup token from appdata/ripaudit/setup-token to create your account.</Overview>
+  <ExtraSearchTerms>rip audit runtime bluray dvdfab plex tmdb tdarr incomplete</ExtraSearchTerms>
+  <Category>Tools:Utilities MediaApp:Video</Category>
+  <WebUI>http://[IP]:[PORT:8080]/</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/justuspost/RipAudit/main/unraid/ripaudit.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/justuspost/RipAudit/main/docs/assets/ripaudit-icon.png</Icon>
+  <ExtraParams>--user 99:100 --security-opt no-new-privileges:true</ExtraParams>
+  <PostArgs/>
+  <Beta>true</Beta>
+  <Requires>Plex Media Server with your movie libraries, and a free TMDB API Read Access Token. Media must be mounted read-only.</Requires>
+  <Config Name="WebUI Port" Target="8080" Default="8080" Mode="tcp" Description="Port for the RipAudit web interface. Keep it on your LAN or behind a TLS reverse proxy." Type="Port" Display="always" Required="true" Mask="false">8080</Config>
+  <Config Name="Appdata" Target="/config" Default="/mnt/user/appdata/ripaudit" Mode="rw" Description="Database, settings, session key, and first-run setup token. Back this folder up." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/ripaudit</Config>
+  <Config Name="Movies (read-only)" Target="/media/Movies" Default="/mnt/user/Movies" Mode="ro" Description="Your movie library, mounted read-only. In RipAudit Settings, map Plex's path for this library to /media/Movies." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/Movies</Config>
+  <Config Name="Time zone" Target="TZ" Default="America/Chicago" Mode="" Description="Used for timestamps and the daily digest hour." Type="Variable" Display="advanced" Required="false" Mask="false">America/Chicago</Config>
+  <Config Name="Media roots" Target="RIPAUDIT_MEDIA_ROOTS" Default="/media" Mode="" Description="Comma-separated container paths to watch on first start. Can be changed later in Settings." Type="Variable" Display="advanced" Required="false" Mask="false">/media</Config>
+  <Config Name="Plex token (optional)" Target="RIPAUDIT_PLEX_TOKEN" Default="" Mode="" Description="Optional. Supply the Plex token here instead of in the WebUI. Environment values override WebUI values and are never written to appdata." Type="Variable" Display="advanced" Required="false" Mask="true"/>
+  <Config Name="TMDB credential (optional)" Target="RIPAUDIT_TMDB_CREDENTIAL" Default="" Mode="" Description="Optional. TMDB API Read Access Token (preferred) or v3 API key." Type="Variable" Display="advanced" Required="false" Mask="true"/>
+  <Config Name="Log level" Target="RIPAUDIT_LOG_LEVEL" Default="INFO" Mode="" Description="DEBUG, INFO, WARNING, or ERROR. Secrets are redacted from logs." Type="Variable" Display="advanced" Required="false" Mask="false">INFO</Config>
+</Container>

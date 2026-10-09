@@ -1,0 +1,18 @@
+{
+  "plex": [
+    {"ratingKey": "101", "type": "movie", "title": "Harbor Lights", "year": 2019, "Guid": [{"id": "tmdb://900001"}],
+     "Media": [{"id": "5001", "Part": [{"id": "7001", "file": "/data/Movies/Harbor Lights (2019)/Harbor Lights (2019).mkv"}]}]},
+    {"ratingKey": "102", "type": "movie", "title": "The Long Road North", "year": 2016, "Guid": [{"id": "tmdb://900002"}],
+     "Media": [{"id": "5002", "Part": [{"id": "7002", "file": "/data/Movies/The Long Road North (2016)/The Long Road North (2016).mkv"}]}]},
+    {"ratingKey": "103", "type": "movie", "title": "Copper Canyon", "year": 2021, "editionTitle": "Extended",
+     "Guid": [{"id": "tmdb://900003"}],
+     "Media": [{"id": "5003", "Part": [{"id": "7003", "file": "/data/Movies/Copper Canyon (2021)/Copper Canyon (2021) {edition-Extended}.mkv"}]}]},
+    {"ratingKey": "104", "type": "movie", "title": "Signal Fire", "year": 2012, "Guid": [],
+     "Media": [{"id": "5004", "Part": [{"id": "7004", "file": "/data/Movies/Signal Fire (2012)/Signal Fire (2012).mkv"}]}]}
+  ],
+  "tmdb": {
+    "900001": {"id": 900001, "title": "Harbor Lights", "release_date": "2019-05-01", "runtime": 3, "imdb_id": null},
+    "900002": {"id": 900002, "title": "The Long Road North", "release_date": "2016-09-09", "runtime": 6, "imdb_id": null},
+    "900003": {"id": 900003, "title": "Copper Canyon", "release_date": "2021-03-12", "runtime": 3, "imdb_id": null}
+  }
+}

@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<!-- Development artifact. Required by Community Applications at the repository root; not submitted. -->
+<CommunityApplications>
+  <Profile>RipAudit is a self-hosted companion to Plex and Tdarr that flags ripped movie files whose runtime does not match an independent reference, so you only review the exceptions.</Profile>
+  <WebPage>https://github.com/justuspost/RipAudit</WebPage>
+  <Forum>https://github.com/justuspost/RipAudit/issues</Forum>
+  <Icon>https://raw.githubusercontent.com/justuspost/RipAudit/main/docs/assets/ripaudit-icon.png</Icon>
+</CommunityApplications>

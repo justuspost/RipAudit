@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge %}
+{% macro sortlink(key, label) -%}
+{% set d = 'desc' if params.get('sort') == key and params.get('dir') != 'desc' else 'asc' %}
+<a href="?{% for k, v in params.items() if k not in ('sort','dir','page') %}{{ k }}={{ v|urlencode }}&{% endfor %}sort={{ key }}&dir={{ d }}">{{ label }}</a>
+{%- endmacro %}
+{% block content %}
+<div class="row between">
+  <h1>All files <span class="muted">({{ total }})</span></h1>
+  <div class="row">
+    <a class="button" href="/export.csv?{{ request.query_params }}">Export CSV</a>
+    <a class="button" href="/export.json?{{ request.query_params }}">Export JSON</a>
+  </div>
+</div>
+<form class="filters card" method="get">
+  <input name="q" value="{{ params.get('q','') }}" placeholder="Search title or path">
+  <select name="outcome"><option value="">Any status</option>
+    {% for k, v in OUTCOMES.items() %}<option value="{{ k }}" {% if params.get('outcome') == k %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>
+  <select name="severity"><option value="">Any severity</option>
+    {% for s in ['high','review','none'] %}<option {% if params.get('severity') == s %}selected{% endif %}>{{ s }}</option>{% endfor %}</select>
+  <select name="library"><option value="">Any library</option>
+    {% for l in libraries %}<option {% if params.get('library') == l %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+  <select name="source"><option value="">Any runtime source</option>
+    <option value="tmdb" {% if params.get('source') == 'tmdb' %}selected{% endif %}>TMDB</option>
+    <option value="user_override" {% if params.get('source') == 'user_override' %}selected{% endif %}>Your source runtime</option>
+    <option value="none" {% if params.get('source') == 'none' %}selected{% endif %}>None</option></select>
+  <label class="small">Added since <input type="date" name="since" value="{{ params.get('since','') }}"></label>
+  <label class="small"><input type="checkbox" name="include_missing" value="1" {% if params.get('include_missing') %}checked{% endif %}> Include missing</label>
+  <button>Apply</button>
+</form>
+<section class="card">
+<table>
+  <thead><tr>
+    <th>{{ sortlink('outcome', 'Status') }}</th><th>{{ sortlink('title', 'Movie') }}</th>
+    <th>{{ sortlink('actual', 'Measured') }}</th><th>{{ sortlink('expected', 'Expected') }}</th>
+    <th>{{ sortlink('difference', 'Difference') }}</th><th>Source</th><th>{{ sortlink('seen', 'Added') }}</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+  <tr>
+    <td>{{ badge(r.outcome, r.severity) }}</td>
+    <td><a href="/files/{{ r.id }}">{{ r.plex_title or basename(r.path) }}</a>{% if r.plex_year %} ({{ r.plex_year }}){% endif %}
+      {% if r.plex_edition %}<span class="tag">{{ r.plex_edition }}</span>{% endif %}
+      <div class="muted small path">{{ r.path }}</div></td>
+    <td>{{ fmt_duration(r.actual_seconds) }}</td><td>{{ fmt_duration(r.expected_seconds) }}</td>
+    <td class="num">{{ fmt_diff(r.difference_seconds) }}</td>
+    <td class="small">{{ {'tmdb': 'TMDB', 'user_override': 'Your source runtime'}.get(r.expected_source, '—') }}</td>
+    <td class="small">{{ fmt_time(r.first_seen) }}</td>
+  </tr>
+  {% else %}<tr><td colspan="7" class="empty">No files match.</td></tr>{% endfor %}
+  </tbody>
+</table>
+{% if total > per %}
+<div class="row pager">
+  {% if page > 1 %}<a href="?{% for k, v in params.items() if k != 'page' %}{{ k }}={{ v|urlencode }}&{% endfor %}page={{ page - 1 }}">Previous</a>{% endif %}
+  <span>Page {{ page }} of {{ ((total - 1) // per) + 1 }}</span>
+  {% if page * per < total %}<a href="?{% for k, v in params.items() if k != 'page' %}{{ k }}={{ v|urlencode }}&{% endfor %}page={{ page + 1 }}">Next</a>{% endif %}
+</div>
+{% endif %}
+</section>
+{% endblock %}

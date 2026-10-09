@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}About · RipAudit{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>About RipAudit</h1>
+  <p>RipAudit compares each movie file's measured runtime with an independent reference and flags differences for review. It reads media files read-only and never modifies, renames, deletes, or transcodes them.</p>
+  <h2>What the results mean</h2>
+  <ul>
+    <li><strong>No runtime issue detected</strong> means the measured duration is within tolerance of the reference. It does not prove that every frame, track, or extra is present.</li>
+    <li>TMDB lists one general runtime per movie, which may describe a different cut than your disc. Your own source runtime, when entered, is used instead.</li>
+    <li>Full-file decode checking is Tdarr's job. RipAudit does not import Tdarr results yet.</li>
+  </ul>
+  <h2>Credits</h2>
+  <p class="tmdb"><img src="/static/tmdb-logo.svg" alt="TMDB" height="14"> This product uses the TMDB API but is not endorsed or certified by TMDB. Movie data from <a href="https://www.themoviedb.org" rel="noopener">The Movie Database</a>.</p>
+  <p>RipAudit is an independent project. It is not affiliated with or endorsed by Plex, TMDB, Tdarr, DVDFab, or Unraid.</p>
+  <p>Version {{ version }} · <a href="https://github.com/justuspost/RipAudit" rel="noopener">Source code</a></p>
+</section>
+{% endblock %}

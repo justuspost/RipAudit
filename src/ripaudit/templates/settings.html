@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Settings · RipAudit{% endblock %}
+{% macro secret(name, field, label) -%}
+<label>{{ label }}
+  <input type="password" name="{{ name }}" autocomplete="off" placeholder="{% if sources[field] == 'environment' %}set by environment variable{% elif sources[field] == 'settings' %}stored — leave blank to keep{% else %}not set{% endif %}" {% if sources[field] == 'environment' %}disabled{% endif %}>
+</label>
+{%- endmacro %}
+{% block content %}
+<h1>Settings</h1>
+<form method="post" action="/settings" class="settings">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+<section class="card"><h2>Media</h2>
+  <label>Media roots (one container path per line; mount these read-only)
+    <textarea name="media_roots" rows="3">{{ s.media_roots|join('\n') }}</textarea></label>
+  <label>File extensions <input name="extensions" value="{{ s.extensions|join(', ') }}"></label>
+  <label>Ignore patterns (one per line, matched against the path under each root)
+    <textarea name="ignore_patterns" rows="4">{{ s.ignore_patterns|join('\n') }}</textarea></label>
+  <div class="grid3">
+    <label>Scan interval (minutes) <input name="scan_interval_minutes" value="{{ s.scan_interval_minutes }}"></label>
+    <label>Unchanged scans required <input name="stability_observations" value="{{ s.stability_observations }}"></label>
+    <label>Minimum file age (seconds) <input name="min_file_age_seconds" value="{{ s.min_file_age_seconds }}"></label>
+    <label>Concurrent inspections <input name="probe_concurrency" value="{{ s.probe_concurrency }}"></label>
+    <label>FFprobe timeout (seconds) <input name="probe_timeout_seconds" value="{{ s.probe_timeout_seconds }}"></label>
+  </div>
+  <p class="small muted">Best practice: rip into a staging folder outside these roots and move finished files in. File stability alone cannot prove a rip finished.</p>
+</section>
+
+<section class="card"><h2>Plex</h2>
+  <label>Plex server URL <input name="plex_url" value="{{ s.plex.url }}" placeholder="http://192.168.1.10:32400"></label>
+  {{ secret('plex_token', 'plex.token', 'Plex token') }}
+  <label>Movie library keys (comma-separated; blank = all movie libraries) <input name="plex_library_keys" value="{{ s.plex.library_keys|join(', ') }}"></label>
+  {% if plex_sections %}<p class="small">Movie libraries found: {% for p in plex_sections %}<code>{{ p.key }}</code> {{ p.title }}{% if not loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+  <label>Path mappings (Plex path => RipAudit path, one per line)
+    <textarea name="path_mappings" rows="3" placeholder="/data/Movies => /media/Movies">{{ mappings_text }}</textarea></label>
+  <div class="grid3">
+    <label>Plex sync interval (minutes) <input name="plex_sync_interval_minutes" value="{{ s.plex.sync_interval_minutes }}"></label>
+    <label>Wait for Plex before "Unverified" (hours) <input name="pending_grace_hours" value="{{ s.plex.pending_grace_hours }}"></label>
+    <label class="check"><input type="checkbox" name="plex_verify_tls" {% if s.plex.verify_tls %}checked{% endif %}> Verify TLS certificates</label>
+  </div>
+</section>
+
+<section class="card"><h2>TMDB</h2>
+  {{ secret('tmdb_credential', 'tmdb.credential', 'TMDB API Read Access Token or API key') }}
+  <div class="grid3">
+    <label>Cache runtimes for (days) <input name="tmdb_cache_days" value="{{ s.tmdb.cache_days }}"></label>
+    <label class="check"><input type="checkbox" name="title_search_fallback" {% if s.tmdb.title_search_fallback %}checked{% endif %}> Offer title/year search candidates when Plex has no external ID (always confirmed manually)</label>
+  </div>
+</section>
+
+<section class="card"><h2>Runtime thresholds</h2>
+  <p class="small muted">Each threshold uses the smaller of the seconds and percentage values, so short content is not hidden by a fixed tolerance. TMDB comparisons never use a threshold below 60 seconds because TMDB runtimes are whole minutes.</p>
+  <div class="grid3">
+    <label>Shorter: review (seconds) <input name="short_review_seconds" value="{{ s.thresholds.short_review_seconds }}"></label>
+    <label>Shorter: review (%) <input name="short_review_percent" value="{{ s.thresholds.short_review_percent }}"></label>
+    <label>Shorter: high priority (seconds) <input name="short_high_seconds" value="{{ s.thresholds.short_high_seconds }}"></label>
+    <label>Shorter: high priority (%) <input name="short_high_percent" value="{{ s.thresholds.short_high_percent }}"></label>
+    <label>Longer: edition review (seconds) <input name="long_review_seconds" value="{{ s.thresholds.long_review_seconds }}"></label>
+    <label>Longer: edition review (%) <input name="long_review_percent" value="{{ s.thresholds.long_review_percent }}"></label>
+  </div>
+</section>
+
+<section class="card"><h2>Notifications</h2>
+  <div class="grid3">
+    <label>Type <select name="notify_kind">{% for k, v in [('none','Off'),('ntfy','ntfy'),('webhook','Generic JSON webhook')] %}<option value="{{ k }}" {% if s.notifications.kind == k %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></label>
+    <label>URL (ntfy topic URL or webhook URL) <input name="notify_url" value="{{ s.notifications.url }}" placeholder="https://ntfy.sh/your-private-topic"></label>
+    {{ secret('notify_token', 'notifications.token', 'Bearer token (optional)') }}
+  </div>
+  <label class="check"><input type="checkbox" name="notify_high" {% if s.notifications.notify_high %}checked{% endif %}> Notify on new high-priority issues</label>
+  <label class="check"><input type="checkbox" name="notify_review" {% if s.notifications.notify_review %}checked{% endif %}> Also notify on other new review items</label>
+  <label class="check"><input type="checkbox" name="daily_digest" {% if s.notifications.daily_digest %}checked{% endif %}> Send a daily digest of open exceptions</label>
+  <label>Digest hour (0–23, container time zone) <input name="digest_hour" value="{{ s.notifications.digest_hour }}"></label>
+  <label class="check"><input type="checkbox" name="include_full_paths" {% if s.notifications.include_full_paths %}checked{% endif %}> Include full file paths (otherwise file names only)</label>
+</section>
+
+<section class="card"><h2>Web interface</h2>
+  <label class="check"><input type="checkbox" name="session_cookie_secure" {% if s.session_cookie_secure %}checked{% endif %}> Secure cookies only (enable when served over HTTPS through a reverse proxy; takes effect after restart)</label>
+</section>
+<button class="primary">Save settings</button>
+</form>
+
+<section class="card"><h2>Connection tests and stored secrets</h2>
+  <form method="post" action="/settings/test-plex" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button>Test Plex connection</button></form>
+  <form method="post" action="/settings/test-notification" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button>Send test notification</button></form>
+  {% for field, label in [('plex.token','Plex token'),('tmdb.credential','TMDB credential'),('notifications.token','notification token')] if sources[field] == 'settings' %}
+  <form method="post" action="/settings/clear-secret" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="field" value="{{ field }}"><button>Remove stored {{ label }}</button></form>
+  {% endfor %}
+  <p><a href="/diagnostics.json">Download sanitized diagnostics</a> <span class="small muted">(secrets removed)</span></p>
+</section>
+{% endblock %}

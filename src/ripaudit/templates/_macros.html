@@ -1,0 +1,9 @@
+{% macro badge(outcome, severity) -%}
+<span class="badge o-{{ outcome or 'pending' }}{% if severity == 'high' %} high{% endif %}">{{ OUTCOMES.get(outcome or 'pending', outcome) }}{% if severity == 'high' %} · high{% endif %}</span>
+{%- endmacro %}
+{% macro status_line(name, st) -%}
+<li><strong>{{ name }}</strong>
+{% if not st %}<span class="muted">not checked yet</span>
+{% elif st.ok %}<span class="ok">connected</span> <span class="muted">{{ st.message }} ({{ fmt_time(st.at) }})</span>
+{% else %}<span class="bad">problem</span> <span class="muted">{{ st.message }} ({{ fmt_time(st.at) }})</span>{% endif %}</li>
+{%- endmacro %}
