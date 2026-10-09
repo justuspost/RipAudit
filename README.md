@@ -70,4 +70,4 @@ This product uses the TMDB API but is not endorsed or certified by TMDB. RipAudi
 
 ## License
 
-A license has not been selected yet. See [docs/license-options.md](docs/license-options.md).
+RipAudit is released under the [MIT License](LICENSE). The TMDB logo is TMDB's trademark and is not covered by this license.

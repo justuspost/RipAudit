@@ -38,5 +38,5 @@ Transitive versions are resolved at build time; CI runs `pip-audit`.
 
 | Asset | License |
 |---|---|
-| RipAudit icon (`docs/assets/ripaudit-icon.png`, `static/icon.svg`) | Original artwork created for this project; covered by the project license once chosen |
+| RipAudit icon (`docs/assets/ripaudit-icon.png`, `static/icon.svg`) | Original artwork created for this project; MIT, as part of this project |
 | TMDB logo (`static/tmdb-logo.svg`) | TMDB trademark, used unmodified under TMDB's attribution requirements; not covered by the project license |

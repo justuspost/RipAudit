@@ -16,3 +16,4 @@ All notable changes to this project are documented here. The format follows Keep
 - First-run setup token, scrypt password hashing, CSRF protection, sign-in lockout, and secret redaction.
 - Dockerfile running as a non-root user, Compose example, CI with tests, dependency audit, container smoke test, and image scan, plus a gated release workflow.
 - Unraid template and Community Applications profile (development artifacts).
+- MIT License.

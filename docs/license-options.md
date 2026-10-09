@@ -1,6 +1,6 @@
-# License options (decision needed)
+# License decision
 
-No license has been applied. Unraid Community Applications requires an OSI-approved license for the repository contents before submission. The maintainer must choose one.
+**Decision: MIT** (selected by the maintainer). The options considered are kept below for reference. Unraid Community Applications requires an OSI-approved license for the repository contents; MIT satisfies this.
 
 | License | Summary | Trade-offs for RipAudit |
 |---|---|---|

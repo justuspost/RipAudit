@@ -4,7 +4,7 @@ Each item that publishes or announces something requires the maintainer's explic
 
 ## Before the first public release
 
-- [ ] Choose and add a `LICENSE` (see [license-options.md](license-options.md)).
+- [x] Choose and add a `LICENSE` (MIT; see [license-options.md](license-options.md)).
 - [ ] Validate against a real Plex server, the real TMDB API, and a real ntfy server; record results in `docs/integrations.md`.
 - [ ] Run on full-size UHD remuxes and confirm FFprobe time and memory stay modest.
 - [ ] Install from the template on an Unraid test system; confirm permissions, the read-only media mount, first-run setup, and restart persistence.
